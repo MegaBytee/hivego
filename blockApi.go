@@ -156,34 +156,8 @@ var OperationType = operationTypes{
 	RecurrentTransfer:           "recurrent_transfer_operation",
 }
 
-func (h *HiveRpcNode) GetBlockRange(startBlock int, count int) (<-chan Block, error) {
-	if h.MaxConn < 10 {
-		h.MaxConn = 10
-	}
-	if h.MaxBatch < 4 {
-		h.MaxBatch = 4
-	}
-
-	blockChan := make(chan Block)
-	go func() {
-		defer close(blockChan)
-		for i := startBlock; i < startBlock+count; {
-			blocks, err := h.fetchBlockInRange(i, count)
-			if err != nil {
-				log.Printf("Error fetching block range starting from %d: %v\n. Retrying in 3 seconds...", i, err)
-				time.Sleep(failureWaitTime)
-				continue
-			}
-
-			for _, block := range blocks {
-				blockChan <- block
-				i++
-			}
-
-			time.Sleep(retryWaitTime)
-		}
-	}()
-	return blockChan, nil
+func (h *HiveRpcNode) GetBlockRange(startBlock int, count int) ([]Block, error) {
+	return h.fetchBlockInRange(startBlock, count)
 }
 
 func (h *HiveRpcNode) GetBlock(blockNum int) (Block, error) {
