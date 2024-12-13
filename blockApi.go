@@ -1,6 +1,8 @@
 package hivego
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"time"
@@ -235,7 +237,14 @@ func (h *HiveRpcNode) fetchBlockInRange(startBlock, count int) ([]Block, error) 
 	for _, blockRangeResponse := range blockRangeResponses {
 		blocks = append(blocks, blockRangeResponse.Result.Blocks...)
 	}
-	return blocks, nil
+
+	var processedBlocks []Block
+	for _, block := range blocks {
+		blockInt, _ := hex.DecodeString(block.BlockID[0:8])
+		block.BlockNumber = int(binary.BigEndian.Uint64(blockInt))
+		processedBlocks = append(processedBlocks, block)
+	}
+	return processedBlocks, nil
 }
 
 func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) {
@@ -268,5 +277,11 @@ func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) 
 	for _, blockResponse := range blockResponses {
 		blocks = append(blocks, blockResponse.Result.Block)
 	}
-	return blocks, nil
+	var processedBlocks []Block
+	for _, block := range blocks {
+		blockInt, _ := hex.DecodeString(block.BlockID[0:8])
+		block.BlockNumber = int(binary.BigEndian.Uint64(blockInt))
+		processedBlocks = append(processedBlocks, block)
+	}
+	return processedBlocks, nil
 }
