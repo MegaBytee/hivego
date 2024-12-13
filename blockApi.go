@@ -241,7 +241,7 @@ func (h *HiveRpcNode) fetchBlockInRange(startBlock, count int) ([]Block, error) 
 	var processedBlocks []Block
 	for _, block := range blocks {
 		blockInt, _ := hex.DecodeString(block.BlockID[0:8])
-		block.BlockNumber = int(binary.BigEndian.Uint64(blockInt))
+		block.BlockNumber = int(binary.BigEndian.Uint32(blockInt))
 		processedBlocks = append(processedBlocks, block)
 	}
 	return processedBlocks, nil
@@ -280,7 +280,7 @@ func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) 
 	var processedBlocks []Block
 	for _, block := range blocks {
 		blockInt, _ := hex.DecodeString(block.BlockID[0:8])
-		block.BlockNumber = int(binary.BigEndian.Uint64(blockInt))
+		block.BlockNumber = int(binary.BigEndian.Uint32(blockInt))
 		processedBlocks = append(processedBlocks, block)
 	}
 	return processedBlocks, nil
