@@ -17,6 +17,12 @@ type getBlockQueryParams struct {
 	BlockNum int `json:"block_num"`
 }
 
+type getVirtualOpsQueryParams struct {
+	BlockNum          int  `json:"block_num"`
+	OnlyVirtual       bool `json:"only_virtual"`
+	IncludeReversible bool `json:"include_reversible"`
+}
+
 const (
 	failureWaitTime = 2500 * time.Millisecond
 	retryWaitTime   = 1000 * time.Millisecond
@@ -50,6 +56,20 @@ type Transaction struct {
 type Operation struct {
 	Type  string                 `json:"type"`
 	Value map[string]interface{} `json:"value"`
+}
+
+type VirtualOp struct {
+	Block int
+	Op    struct {
+		Type  string
+		Value map[string]interface{}
+	}
+	OpInTrx     int
+	TrxId       string
+	TrxInBlock  int
+	VirtualOp   bool
+	OperationId int
+	Timestamp   string
 }
 
 type operationTypes struct {
@@ -207,6 +227,69 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 	}()
 
 	return blockChan, nil
+}
+
+func (h *HiveRpcNode) FetchVirtualOps(blockHeight int, onlyVirtual bool, IncludeReversible bool) ([]VirtualOp, error) {
+	params := getVirtualOpsQueryParams{BlockNum: blockHeight, OnlyVirtual: IncludeReversible, IncludeReversible: IncludeReversible}
+	query := hrpcQuery{method: "account_history_api.get_ops_in_block", params: params}
+	queries := []hrpcQuery{query}
+
+	endpoint := h.address
+	res, err := h.rpcExecBatchFast(endpoint, queries)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var virtualOpResponses []struct {
+		ID      int    `json:"id"`
+		JsonRPC string `json:"jsonrpc"`
+		Result  struct {
+			Ops []struct {
+				Op struct {
+					Type  string                 `json:"type"`
+					Value map[string]interface{} `json:"value"`
+					// Value interface{} `json:"value"`
+				} `json:"op"`
+				Block       int    `json:"block"`
+				OpInTrx     int    `json:"op_in_trx"`
+				TrxId       string `json:"trx_id"`
+				TrxInBlock  int    `json:"trx_in_block"`
+				VirtualOp   bool   `json:"virtual_op"`
+				OperationId int    `json:"operation_id"`
+				Timestamp   string `json:"timestamp"`
+			} `json:"ops"`
+		} `json:"result"`
+	}
+
+	err = json.Unmarshal(res[0], &virtualOpResponses)
+	if err != nil {
+		return nil, err
+	}
+
+	var virtualOps []VirtualOp
+	for _, virtualOpResponse := range virtualOpResponses {
+		for _, op := range virtualOpResponse.Result.Ops {
+			virtualOps = append(virtualOps, VirtualOp{
+				Block: op.Block,
+				Op: struct {
+					Type  string
+					Value map[string]interface{}
+				}{
+					Type:  op.Op.Type,
+					Value: op.Op.Value,
+				},
+				OpInTrx:     op.OpInTrx,
+				TrxId:       op.TrxId,
+				TrxInBlock:  op.TrxInBlock,
+				VirtualOp:   op.VirtualOp,
+				OperationId: op.OperationId,
+				Timestamp:   op.Timestamp,
+			})
+		}
+	}
+
+	return virtualOps, nil
 }
 
 func (h *HiveRpcNode) fetchBlockInRange(startBlock, count int) ([]Block, error) {
