@@ -59,17 +59,17 @@ type Operation struct {
 }
 
 type VirtualOp struct {
-	Block int
+	Block int `json:"block"`
 	Op    struct {
-		Type  string
-		Value map[string]interface{}
-	}
-	OpInTrx     int
-	TrxId       string
-	TrxInBlock  int
-	VirtualOp   bool
-	OperationId int
-	Timestamp   string
+		Type  string                 `json:"type"`
+		Value map[string]interface{} `json:"value"`
+	} `json:"op"`
+	OpInTrx     int    `json:"op_in_trx"`
+	TrxId       string `json:"trx_id"`
+	TrxInBlock  int    `json:"trx_in_block"`
+	VirtualOp   bool   `json:"virtual_op"`
+	OperationId int    `json:"operation_id"`
+	Timestamp   string `json:"timestamp"`
 }
 
 type operationTypes struct {
