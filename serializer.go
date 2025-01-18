@@ -123,7 +123,7 @@ func appendVAsset(asset string, b *bytes.Buffer) error {
 	return nil
 }
 
-func SerializeTx(tx hiveTransaction) ([]byte, error) {
+func SerializeTx(tx HiveTransaction) ([]byte, error) {
 	var buf bytes.Buffer
 	buf.Write(refBlockNumB(tx.RefBlockNum))
 	buf.Write(refBlockPrefixB(tx.RefBlockPrefix))

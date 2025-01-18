@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 )
 
-type hiveTransaction struct {
+type HiveTransaction struct {
 	RefBlockNum    uint16           `json:"ref_block_num"`
 	RefBlockPrefix uint32           `json:"ref_block_prefix"`
 	Expiration     string           `json:"expiration"`
@@ -14,7 +14,7 @@ type hiveTransaction struct {
 	Signatures     []string         `json:"signatures"`
 }
 
-func (t *hiveTransaction) GenerateTrxId() (string, error) {
+func (t *HiveTransaction) GenerateTrxId() (string, error) {
 	tB, err := SerializeTx(*t)
 	if err != nil {
 		return "", err
@@ -24,7 +24,7 @@ func (t *hiveTransaction) GenerateTrxId() (string, error) {
 	return hex.EncodeToString(digest)[0:40], nil
 }
 
-func (t *hiveTransaction) prepareJson() {
+func (t *HiveTransaction) prepareJson() {
 	var opsContainer [][2]interface{}
 	for _, op := range t.Operations {
 		var opContainer [2]interface{}
@@ -43,7 +43,7 @@ func (h *HiveRpcNode) Broadcast(ops []HiveOperation, wif *string) (string, error
 	if err != nil {
 		return "", err
 	}
-	tx := hiveTransaction{
+	tx := HiveTransaction{
 		RefBlockNum:    signingData.refBlockNum,
 		RefBlockPrefix: signingData.refBlockPrefix,
 		Expiration:     signingData.expiration,

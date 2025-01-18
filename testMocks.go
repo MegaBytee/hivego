@@ -38,11 +38,11 @@ func getTwoTestOps() []HiveOperation {
 	return []HiveOperation{getTestVoteOp(), getTestCustomJsonOp()}
 }
 
-func getTestTx(ops []HiveOperation) hiveTransaction {
+func getTestTx(ops []HiveOperation) HiveTransaction {
 	exp, _ := time.Parse("2006-01-02T15:04:05", "2016-08-08T12:24:17")
 	expStr := exp.Format("2006-01-02T15:04:05")
 
-	return hiveTransaction{
+	return HiveTransaction{
 		RefBlockNum:    36029,
 		RefBlockPrefix: 1164960351,
 		Expiration:     expStr,
@@ -50,6 +50,6 @@ func getTestTx(ops []HiveOperation) hiveTransaction {
 	}
 }
 
-func getTestVoteTx() hiveTransaction {
+func getTestVoteTx() HiveTransaction {
 	return getTestTx([]HiveOperation{getTestVoteOp()})
 }
