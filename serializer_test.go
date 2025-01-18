@@ -71,7 +71,7 @@ func TestAppendVStringArray(t *testing.T) {
 }
 
 func TestSerializeTx(t *testing.T) {
-	got, _ := serializeTx(getTestVoteTx())
+	got, _ := SerializeTx(getTestVoteTx())
 	expected := []byte{189, 140, 95, 226, 111, 69, 241, 121, 168, 87, 1, 0, 5, 120, 101, 114, 111, 99, 5, 120, 101, 114, 111, 99, 6, 112, 105, 115, 116, 111, 110, 16, 39, 0}
 	if !bytes.Equal(got, expected) {
 		t.Error("Expected", expected, "got", got)

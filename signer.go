@@ -50,7 +50,7 @@ func (h *HiveRpcNode) getSigningData() (signingDataFromChain, error) {
 	return signingData, nil
 }
 
-func hashTxForSig(tx []byte) []byte {
+func HashTxForSig(tx []byte) []byte {
 	var message bytes.Buffer
 	message.Write(getHiveChainId())
 	message.Write(tx)
@@ -60,7 +60,7 @@ func hashTxForSig(tx []byte) []byte {
 	return digest.Sum(nil)
 }
 
-func hashTx(tx []byte) []byte {
+func HashTx(tx []byte) []byte {
 	var message bytes.Buffer
 	message.Write(tx)
 
@@ -93,6 +93,12 @@ func GphBase58CheckDecode(input string) ([]byte, [1]byte, error) {
 	}
 	payload := decoded[1:dataLen]
 	return payload, version, nil
+}
+
+func GphBase58Encode(input []byte, version [1]byte) string {
+	checksum := checksum(append([]byte{version[0]}, input...))
+	encoded := append(input, checksum[:4]...)
+	return base58.Encode(encoded)
 }
 
 func checksum(input []byte) [4]byte {

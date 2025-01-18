@@ -14,12 +14,12 @@ type hiveTransaction struct {
 	Signatures     []string         `json:"signatures"`
 }
 
-func (t *hiveTransaction) generateTrxId() (string, error) {
-	tB, err := serializeTx(*t)
+func (t *hiveTransaction) GenerateTrxId() (string, error) {
+	tB, err := SerializeTx(*t)
 	if err != nil {
 		return "", err
 	}
-	digest := hashTx(tB)
+	digest := HashTx(tB)
 
 	return hex.EncodeToString(digest)[0:40], nil
 }
@@ -50,15 +50,15 @@ func (h *HiveRpcNode) Broadcast(ops []HiveOperation, wif *string) (string, error
 		Operations:     ops,
 	}
 
-	message, err := serializeTx(tx)
+	message, err := SerializeTx(tx)
 
 	if err != nil {
 		return "", err
 	}
 
-	digest := hashTxForSig(message)
+	digest := HashTxForSig(message)
 
-	txId, err := tx.generateTrxId()
+	txId, err := tx.GenerateTrxId()
 	if err != nil {
 		return "", err
 	}

@@ -31,6 +31,12 @@ func KeyPairFromWif(wif string) (*KeyPair, error) {
 	return &KeyPair{prvKey, pubKey}, nil
 }
 
+func KeyPairFromBytes(privKey []byte) *KeyPair {
+	prvKey, pubKey := secp256k1.PrivKeyFromBytes(privKey)
+
+	return &KeyPair{prvKey, pubKey}
+}
+
 // Decodes a base58 Hive public key to secp256k1 public key
 func DecodePublicKey(pubKey string) (*secp256k1.PublicKey, error) {
 	// check prefix matches

@@ -273,8 +273,8 @@ func (h *HiveRpcNode) FetchVirtualOps(blockHeight int, onlyVirtual bool, Include
 			virtualOps = append(virtualOps, VirtualOp{
 				Block: op.Block,
 				Op: struct {
-					Type  string
-					Value map[string]interface{}
+					Type  string                 `json:"type"`
+					Value map[string]interface{} `json:"value"`
 				}{
 					Type:  op.Op.Type,
 					Value: op.Op.Value,
