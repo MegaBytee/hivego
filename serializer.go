@@ -169,7 +169,7 @@ func (o voteOperation) SerializeOp() ([]byte, error) {
 	return voteBuf.Bytes(), nil
 }
 
-func (o customJsonOperation) SerializeOp() ([]byte, error) {
+func (o CustomJsonOperation) SerializeOp() ([]byte, error) {
 	var jBuf bytes.Buffer
 	jBuf.Write([]byte{opIdB(o.opText)})
 	appendVStringArray(o.RequiredAuths, &jBuf)
@@ -180,7 +180,7 @@ func (o customJsonOperation) SerializeOp() ([]byte, error) {
 	return jBuf.Bytes(), nil
 }
 
-func (o claimRewardOperation) SerializeOp() ([]byte, error) {
+func (o ClaimRewardOperation) SerializeOp() ([]byte, error) {
 	var claimBuf bytes.Buffer
 	claimBuf.Write([]byte{opIdB(o.opText)})
 	appendVString(o.Account, &claimBuf)
@@ -205,7 +205,7 @@ func (o claimRewardOperation) SerializeOp() ([]byte, error) {
 	return claimBuf.Bytes(), nil
 }
 
-func (o transferOperation) SerializeOp() ([]byte, error) {
+func (o TransferOperation) SerializeOp() ([]byte, error) {
 	var transferBuf bytes.Buffer
 	transferBuf.Write([]byte{opIdB(o.opText)})
 	appendVString(o.From, &transferBuf)
@@ -216,7 +216,7 @@ func (o transferOperation) SerializeOp() ([]byte, error) {
 	return transferBuf.Bytes(), nil
 }
 
-func (a accountUpdateOperation) SerializeOp() ([]byte, error) {
+func (a AccountUpdateOperation) SerializeOp() ([]byte, error) {
 	var buf bytes.Buffer
 
 	// operation ID

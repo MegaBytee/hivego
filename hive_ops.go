@@ -35,7 +35,7 @@ type Auths struct {
 }
 
 // ref: https://developers.hive.io/apidefinitions/#broadcast_ops_account_update
-type accountUpdateOperation struct {
+type AccountUpdateOperation struct {
 	Account string `json:"account"`
 
 	// optional: auths
@@ -50,7 +50,7 @@ type accountUpdateOperation struct {
 	opText string
 }
 
-func (o accountUpdateOperation) OpName() string {
+func (o AccountUpdateOperation) OpName() string {
 	return o.opText
 }
 
@@ -68,7 +68,7 @@ func (h *HiveRpcNode) UpdateAccount(
 		return "", fmt.Errorf("owner, active, posting are not supported or tested yet")
 	}
 
-	op := accountUpdateOperation{
+	op := AccountUpdateOperation{
 		Account:      account,
 		Owner:        owner,
 		Active:       active,
@@ -81,7 +81,7 @@ func (h *HiveRpcNode) UpdateAccount(
 	return h.Broadcast([]HiveOperation{op}, wif)
 }
 
-type customJsonOperation struct {
+type CustomJsonOperation struct {
 	RequiredAuths        []string `json:"required_auths"`
 	RequiredPostingAuths []string `json:"required_posting_auths"`
 	Id                   string   `json:"id"`
@@ -89,16 +89,16 @@ type customJsonOperation struct {
 	opText               string
 }
 
-func (o customJsonOperation) OpName() string {
+func (o CustomJsonOperation) OpName() string {
 	return o.opText
 }
 
 func (h *HiveRpcNode) BroadcastJson(reqAuth []string, reqPostAuth []string, id string, cj string, wif *string) (string, error) {
-	op := customJsonOperation{reqAuth, reqPostAuth, id, cj, "custom_json"}
+	op := CustomJsonOperation{reqAuth, reqPostAuth, id, cj, "custom_json"}
 	return h.Broadcast([]HiveOperation{op}, wif)
 }
 
-type claimRewardOperation struct {
+type ClaimRewardOperation struct {
 	Account     string `json:"account"`
 	RewardHBD   string `json:"reward_hbd"`
 	RewardHIVE  string `json:"reward_hive"`
@@ -106,7 +106,7 @@ type claimRewardOperation struct {
 	opText      string
 }
 
-func (o claimRewardOperation) OpName() string {
+func (o ClaimRewardOperation) OpName() string {
 	return o.opText
 }
 
@@ -118,7 +118,7 @@ func (h *HiveRpcNode) ClaimRewards(Account string, wif *string) (string, error) 
 	}
 
 	for _, accounts := range accountData {
-		claim := claimRewardOperation{Account, accounts.RewardHbdBalance, accounts.RewardHiveBalance, accounts.RewardVestingBalance, "claim_reward_balance"}
+		claim := ClaimRewardOperation{Account, accounts.RewardHbdBalance, accounts.RewardHiveBalance, accounts.RewardVestingBalance, "claim_reward_balance"}
 		broadcast, err := h.Broadcast([]HiveOperation{claim}, wif)
 		return broadcast, err
 	}
@@ -127,7 +127,7 @@ func (h *HiveRpcNode) ClaimRewards(Account string, wif *string) (string, error) 
 
 }
 
-type transferOperation struct {
+type TransferOperation struct {
 	From   string `json:"from"`
 	To     string `json:"to"`
 	Amount string `json:"amount"`
@@ -135,12 +135,12 @@ type transferOperation struct {
 	opText string
 }
 
-func (o transferOperation) OpName() string {
+func (o TransferOperation) OpName() string {
 	return o.opText
 }
 
 func (h *HiveRpcNode) Transfer(from string, to string, amount string, memo string, wif *string) (string, error) {
-	transfer := transferOperation{from, to, amount, memo, "transfer"}
+	transfer := TransferOperation{from, to, amount, memo, "transfer"}
 
 	return h.Broadcast([]HiveOperation{transfer}, wif)
 }

@@ -19,7 +19,7 @@ type signingDataFromChain struct {
 	expiration     string
 }
 
-func (h *HiveRpcNode) getSigningData() (signingDataFromChain, error) {
+func (h *HiveRpcNode) GetSigningData() (signingDataFromChain, error) {
 	propsB, err := h.GetDynamicGlobalProps()
 	if err != nil {
 		return signingDataFromChain{}, err

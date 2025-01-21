@@ -13,7 +13,7 @@ func getTestVoteOp() HiveOperation {
 }
 
 func getTestCustomJsonOp() HiveOperation {
-	return customJsonOperation{
+	return CustomJsonOperation{
 		RequiredAuths:        []string{},
 		RequiredPostingAuths: []string{"xeroc"},
 		Id:                   "test-id",
@@ -23,7 +23,7 @@ func getTestCustomJsonOp() HiveOperation {
 }
 
 func getTestAccountUpdateOp() HiveOperation {
-	return accountUpdateOperation{
+	return AccountUpdateOperation{
 		Account:      "sniperduel17",
 		Owner:        nil,
 		Active:       nil,

@@ -2,6 +2,9 @@ package hivego
 
 import (
 	"encoding/hex"
+	"fmt"
+
+	"github.com/decred/dcrd/dcrec/secp256k1/v2"
 )
 
 type HiveTransaction struct {
@@ -24,6 +27,28 @@ func (t *HiveTransaction) GenerateTrxId() (string, error) {
 	return hex.EncodeToString(digest)[0:40], nil
 }
 
+func (t *HiveTransaction) Sign(keyPair KeyPair) (string, error) {
+	message, err := SerializeTx(*t)
+
+	if err != nil {
+		return "", err
+	}
+
+	digest := HashTxForSig(message)
+
+	sig, err := secp256k1.SignCompact(keyPair.PrivateKey, digest, true)
+
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(sig), nil
+}
+
+func (t *HiveTransaction) AddSig(sig string) {
+	t.Signatures = append(t.Signatures, sig)
+}
+
 func (t *HiveTransaction) prepareJson() {
 	var opsContainer [][2]interface{}
 	for _, op := range t.Operations {
@@ -39,7 +64,7 @@ func (t *HiveTransaction) prepareJson() {
 }
 
 func (h *HiveRpcNode) Broadcast(ops []HiveOperation, wif *string) (string, error) {
-	signingData, err := h.getSigningData()
+	signingData, err := h.GetSigningData()
 	if err != nil {
 		return "", err
 	}
@@ -81,5 +106,27 @@ func (h *HiveRpcNode) Broadcast(ops []HiveOperation, wif *string) (string, error
 		}
 	}
 
+	return txId, nil
+}
+
+func (h *HiveRpcNode) BroadcastRaw(tx HiveTransaction) (string, error) {
+	if len(tx.Signatures) == 0 {
+		return "", fmt.Errorf("transaction is not signed")
+	}
+
+	tx.prepareJson()
+	var params []interface{}
+	params = append(params, tx)
+	if !h.NoBroadcast {
+		q := hrpcQuery{"condenser_api.broadcast_transaction", params}
+		res, err := h.rpcExec(h.address, q)
+		if err != nil {
+			return string(res), err
+		}
+	}
+	txId, err := tx.GenerateTrxId()
+	if err != nil {
+		return "", err
+	}
 	return txId, nil
 }
