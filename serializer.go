@@ -157,7 +157,7 @@ func serializeOps(ops []HiveOperation) ([]byte, error) {
 
 func (o voteOperation) SerializeOp() ([]byte, error) {
 	var voteBuf bytes.Buffer
-	voteBuf.Write([]byte{opIdB(o.opText)})
+	voteBuf.Write([]byte{opIdB(o.OpName())})
 	appendVString(o.Voter, &voteBuf)
 	appendVString(o.Author, &voteBuf)
 	appendVString(o.Permlink, &voteBuf)
@@ -171,7 +171,7 @@ func (o voteOperation) SerializeOp() ([]byte, error) {
 
 func (o CustomJsonOperation) SerializeOp() ([]byte, error) {
 	var jBuf bytes.Buffer
-	jBuf.Write([]byte{opIdB(o.opText)})
+	jBuf.Write([]byte{opIdB(o.OpName())})
 	appendVStringArray(o.RequiredAuths, &jBuf)
 	appendVStringArray(o.RequiredPostingAuths, &jBuf)
 	appendVString(o.Id, &jBuf)
@@ -182,7 +182,7 @@ func (o CustomJsonOperation) SerializeOp() ([]byte, error) {
 
 func (o ClaimRewardOperation) SerializeOp() ([]byte, error) {
 	var claimBuf bytes.Buffer
-	claimBuf.Write([]byte{opIdB(o.opText)})
+	claimBuf.Write([]byte{opIdB(o.OpName())})
 	appendVString(o.Account, &claimBuf)
 	err := appendVAsset(o.RewardHIVE, &claimBuf)
 
@@ -207,7 +207,7 @@ func (o ClaimRewardOperation) SerializeOp() ([]byte, error) {
 
 func (o TransferOperation) SerializeOp() ([]byte, error) {
 	var transferBuf bytes.Buffer
-	transferBuf.Write([]byte{opIdB(o.opText)})
+	transferBuf.Write([]byte{opIdB(o.OpName())})
 	appendVString(o.From, &transferBuf)
 	appendVString(o.To, &transferBuf)
 	appendVAsset(o.Amount, &transferBuf)
@@ -220,7 +220,7 @@ func (a AccountUpdateOperation) SerializeOp() ([]byte, error) {
 	var buf bytes.Buffer
 
 	// operation ID
-	buf.WriteByte(opIdB(a.opText))
+	buf.WriteByte(opIdB(a.OpName()))
 
 	// account name
 	appendVString(a.Account, &buf)
@@ -245,6 +245,67 @@ func (a AccountUpdateOperation) SerializeOp() ([]byte, error) {
 
 	// JSON metadata
 	appendVString(a.JsonMetadata, &buf)
+
+	return buf.Bytes(), nil
+}
+
+func (o TransferToSavings) SerializeOp() ([]byte, error) {
+	// OperationSerializers.transfer_to_savings = OperationDataSerializer(32, [
+	// 	['from', StringSerializer],
+	// 	['to', StringSerializer],
+	// 	['amount', AssetSerializer],
+	// 	['memo', StringSerializer]
+	//   ])
+
+	var buf bytes.Buffer
+	buf.WriteByte(opIdB(o.OpName()))
+	appendVString(o.From, &buf)
+	appendVString(o.To, &buf)
+	appendVAsset(o.Amount, &buf)
+	appendVString(o.Memo, &buf)
+
+	return buf.Bytes(), nil
+}
+
+func (o TransferFromSavings) SerializeOp() ([]byte, error) {
+	// OperationSerializers.transfer_from_savings = OperationDataSerializer(33, [
+	// 	['from', StringSerializer],
+	// 	['request_id', UInt32Serializer],
+	// 	['to', StringSerializer],
+	// 	['amount', AssetSerializer],
+	// 	['memo', StringSerializer]
+	//   ])
+
+	var buf bytes.Buffer
+	buf.WriteByte(opIdB(o.OpName()))
+	appendVString(o.From, &buf)
+	err := binary.Write(&buf, binary.LittleEndian, uint32(o.RequestId))
+	if err != nil {
+		return nil, err
+	}
+	appendVString(o.To, &buf)
+	appendVAsset(o.Amount, &buf)
+	appendVString(o.Memo, &buf)
+
+	return buf.Bytes(), nil
+}
+
+func (o CancelTransferFromSavings) SerializeOp() ([]byte, error) {
+	// OperationSerializers.cancel_transfer_from_savings = OperationDataSerializer(
+	// 	34,
+	// 	[
+	// 	  ['from', StringSerializer],
+	// 	  ['request_id', UInt32Serializer]
+	// 	]
+	//   )
+
+	var buf bytes.Buffer
+	buf.WriteByte(opIdB(o.OpName()))
+	appendVString(o.From, &buf)
+	err := binary.Write(&buf, binary.LittleEndian, uint32(o.RequestId))
+	if err != nil {
+		return nil, err
+	}
 
 	return buf.Bytes(), nil
 }

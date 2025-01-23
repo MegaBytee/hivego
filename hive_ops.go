@@ -19,13 +19,45 @@ type voteOperation struct {
 }
 
 func (o voteOperation) OpName() string {
-	return o.opText
+	return "vote"
 }
 
 func (h *HiveRpcNode) VotePost(voter string, author string, permlink string, weight int, wif *string) (string, error) {
 	vote := voteOperation{voter, author, permlink, int16(weight), "vote"}
 
 	return h.Broadcast([]HiveOperation{vote}, wif)
+}
+
+type TransferFromSavings struct {
+	Amount    string
+	From      string
+	To        string
+	Memo      string
+	RequestId int
+}
+
+func (o TransferFromSavings) OpName() string {
+	return "transfer_from_savings"
+}
+
+type TransferToSavings struct {
+	Amount string
+	From   string
+	To     string
+	Memo   string
+}
+
+func (o TransferToSavings) OpName() string {
+	return "transfer_to_savings"
+}
+
+type CancelTransferFromSavings struct {
+	From      string
+	RequestId int
+}
+
+func (o CancelTransferFromSavings) OpName() string {
+	return "cancel_transfer_from_savings"
 }
 
 type Auths struct {
@@ -51,9 +83,10 @@ type AccountUpdateOperation struct {
 }
 
 func (o AccountUpdateOperation) OpName() string {
-	return o.opText
+	return "account_update"
 }
 
+// Broadcast Account update operation
 func (h *HiveRpcNode) UpdateAccount(
 	account string,
 	owner *Auths,
@@ -75,7 +108,6 @@ func (h *HiveRpcNode) UpdateAccount(
 		Posting:      posting,
 		MemoKey:      memoKey,
 		JsonMetadata: jsonMetadata,
-		opText:       "account_update",
 	}
 
 	return h.Broadcast([]HiveOperation{op}, wif)
@@ -90,7 +122,7 @@ type CustomJsonOperation struct {
 }
 
 func (o CustomJsonOperation) OpName() string {
-	return o.opText
+	return "custom_json"
 }
 
 func (h *HiveRpcNode) BroadcastJson(reqAuth []string, reqPostAuth []string, id string, cj string, wif *string) (string, error) {
@@ -132,15 +164,14 @@ type TransferOperation struct {
 	To     string `json:"to"`
 	Amount string `json:"amount"`
 	Memo   string `json:"memo"`
-	opText string
 }
 
 func (o TransferOperation) OpName() string {
-	return o.opText
+	return "transfer"
 }
 
 func (h *HiveRpcNode) Transfer(from string, to string, amount string, memo string, wif *string) (string, error) {
-	transfer := TransferOperation{from, to, amount, memo, "transfer"}
+	transfer := TransferOperation{from, to, amount, memo}
 
 	return h.Broadcast([]HiveOperation{transfer}, wif)
 }
