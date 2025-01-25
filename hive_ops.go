@@ -29,11 +29,11 @@ func (h *HiveRpcNode) VotePost(voter string, author string, permlink string, wei
 }
 
 type TransferFromSavings struct {
-	Amount    string
-	From      string
-	To        string
-	Memo      string
-	RequestId int
+	Amount    string `json:"amount"`
+	From      string `json:"from"`
+	To        string `json:"to"`
+	Memo      string `json:"memo"`
+	RequestId int    `json:"request_id"`
 }
 
 func (o TransferFromSavings) OpName() string {
@@ -41,10 +41,10 @@ func (o TransferFromSavings) OpName() string {
 }
 
 type TransferToSavings struct {
-	Amount string
-	From   string
-	To     string
-	Memo   string
+	Amount string `json:"amount"`
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Memo   string `json:"memo"`
 }
 
 func (o TransferToSavings) OpName() string {
@@ -52,8 +52,8 @@ func (o TransferToSavings) OpName() string {
 }
 
 type CancelTransferFromSavings struct {
-	From      string
-	RequestId int
+	From      string `json:"from"`
+	RequestId int    `json:"request_id"`
 }
 
 func (o CancelTransferFromSavings) OpName() string {
