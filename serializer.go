@@ -372,12 +372,22 @@ func serializeAuthority(auth Auths, buf *bytes.Buffer) {
 		log.Printf("error writing key_auths length: %v\n", err)
 		return
 	}
-	for _, keyAuth := range auth.KeyAuths {
-		appendVString(keyAuth[0].(string), buf)
+	for _, keyAuth := range sortKeyAuth(auth.KeyAuths) {
+		pk := DecodePublicKey(keyAuth[0].(string))
+		
+		binary.Write(buf, binary.LittleEndian, pk.SerializeCompressed())
 		err = binary.Write(buf, binary.LittleEndian, uint16(keyAuth[1].(int)))
 		if err != nil {
 			log.Printf("error writing key_auth weight: %v\n", err)
 			return
 		}
 	}
+}
+
+
+func sortKeyAuth(auths [][2]interface{}{}) [][2]interface{}{} {
+	sort.Slice(auths, func(i, j int) bool {
+		return auths[i][0].(string) < auths[j][0].(string)
+	})
+	return auths
 }
