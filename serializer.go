@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -373,8 +374,13 @@ func serializeAuthority(auth Auths, buf *bytes.Buffer) {
 		return
 	}
 	for _, keyAuth := range sortKeyAuth(auth.KeyAuths) {
-		pk := DecodePublicKey(keyAuth[0].(string))
-		
+		pk, err := DecodePublicKey(keyAuth[0].(string))
+
+		if err != nil {
+			log.Printf("error decoding public key: %v\n", err)
+			return
+		}
+
 		binary.Write(buf, binary.LittleEndian, pk.SerializeCompressed())
 		err = binary.Write(buf, binary.LittleEndian, uint16(keyAuth[1].(int)))
 		if err != nil {
@@ -384,8 +390,7 @@ func serializeAuthority(auth Auths, buf *bytes.Buffer) {
 	}
 }
 
-
-func sortKeyAuth(auths [][2]interface{}{}) [][2]interface{}{} {
+func sortKeyAuth(auths [][2]interface{}) [][2]interface{} {
 	sort.Slice(auths, func(i, j int) bool {
 		return auths[i][0].(string) < auths[j][0].(string)
 	})
