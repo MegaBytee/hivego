@@ -3,10 +3,17 @@ package hivego
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"log"
 	"time"
+
+	"github.com/vsc-eco/hivego/utils"
 )
+
+type globalProps struct {
+	HeadBlockNumber uint64 `json:"head_block_number"`
+	HeadBlockId     string `json:"head_block_id"`
+	Time            string `json:"time"`
+}
 
 type getBlockRangeQueryParams struct {
 	StartingBlockNum uint64 `json:"starting_block_num"`
@@ -41,7 +48,6 @@ type Block struct {
 	TransactionIds        []string      `json:"transaction_ids"`
 	WitnessSignature      string        `json:"witness_signature"`
 }
-
 type Transaction struct {
 	Expiration           string        `json:"expiration"`
 	Extensions           []interface{} `json:"extensions"`
@@ -52,7 +58,6 @@ type Transaction struct {
 	RequiredAuths        []string      `json:"required_auths,omitempty"`
 	RequiredPostingAuths []string      `json:"required_posting_auths,omitempty"`
 }
-
 type Operation struct {
 	Type  string                 `json:"type"`
 	Value map[string]interface{} `json:"value"`
@@ -178,6 +183,10 @@ var OperationType = operationTypes{
 	RecurrentTransfer:           "recurrent_transfer_operation",
 }
 
+func (h *HiveRpcNode) GetDynamicGlobalProps() (*utils.RPCResponse, error) {
+	q := hrpcQuery{method: utils.Get_dynamic_global_properties, params: []string{}}
+	return h.CallRaw(q)
+}
 func (h *HiveRpcNode) GetBlockRange(startBlock uint64, count uint64) ([]Block, error) {
 	return h.fetchBlockInRange(startBlock, count)
 }
@@ -194,8 +203,9 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 	blockChan := make(chan Block)
 
 	go func() {
-		dynProps := hrpcQuery{method: "condenser_api.get_dynamic_global_properties", params: []string{}}
-		res, err := h.rpcExec(h.address, dynProps)
+
+		res, err := h.GetDynamicGlobalProps()
+
 		if err != nil {
 			log.Fatalf("Failed to fetch dynamic global properties: %v", err)
 			close(blockChan)
@@ -203,7 +213,8 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 		}
 
 		var props globalProps
-		err = json.Unmarshal(res, &props)
+		//err = json.Unmarshal(res, &props)
+		err = utils.Recast(res.Result, &props)
 		if err != nil {
 			log.Fatalf("Failed to unmarshal dynamic global properties: %v", err)
 			close(blockChan)
@@ -231,11 +242,10 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 
 func (h *HiveRpcNode) FetchVirtualOps(blockHeight uint64, onlyVirtual bool, IncludeReversible bool) ([]VirtualOp, error) {
 	params := getVirtualOpsQueryParams{BlockNum: blockHeight, OnlyVirtual: IncludeReversible, IncludeReversible: IncludeReversible}
-	query := hrpcQuery{method: "account_history_api.get_ops_in_block", params: params}
+	query := hrpcQuery{method: utils.Get_ops_in_block, params: params}
 	queries := []hrpcQuery{query}
 
-	endpoint := h.address
-	res, err := h.rpcExecBatchFast(endpoint, queries)
+	res, err := h.CallBatchRaw(queries)
 
 	if err != nil {
 		return nil, err
@@ -262,7 +272,8 @@ func (h *HiveRpcNode) FetchVirtualOps(blockHeight uint64, onlyVirtual bool, Incl
 		} `json:"result"`
 	}
 
-	err = json.Unmarshal(res[0], &virtualOpResponses)
+	//err = json.Unmarshal(res[0], &virtualOpResponses)
+	err = utils.Recast(res[0].Result, &virtualOpResponses)
 	if err != nil {
 		return nil, err
 	}
@@ -294,11 +305,10 @@ func (h *HiveRpcNode) FetchVirtualOps(blockHeight uint64, onlyVirtual bool, Incl
 
 func (h *HiveRpcNode) fetchBlockInRange(startBlock, count uint64) ([]Block, error) {
 	params := getBlockRangeQueryParams{StartingBlockNum: startBlock, Count: count}
-	query := hrpcQuery{method: "block_api.get_block_range", params: params}
+	query := hrpcQuery{method: utils.Get_block_range, params: params}
 	queries := []hrpcQuery{query}
 
-	endpoint := h.address
-	res, err := h.rpcExecBatchFast(endpoint, queries)
+	res, err := h.CallBatchRaw(queries)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +321,7 @@ func (h *HiveRpcNode) fetchBlockInRange(startBlock, count uint64) ([]Block, erro
 		} `json:"result"`
 	}
 
-	err = json.Unmarshal(res[0], &blockRangeResponses)
+	err = utils.Recast(res[0].Result, &blockRangeResponses)
 	if err != nil {
 		return nil, err
 	}
@@ -333,12 +343,11 @@ func (h *HiveRpcNode) fetchBlockInRange(startBlock, count uint64) ([]Block, erro
 func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) {
 	var queries []hrpcQuery
 	for _, param := range params {
-		query := hrpcQuery{method: "block_api.get_block", params: param}
+		query := hrpcQuery{method: utils.Get_block, params: param}
 		queries = append(queries, query)
 	}
 
-	endpoint := h.address
-	res, err := h.rpcExecBatchFast(endpoint, queries)
+	res, err := h.CallBatchRaw(queries)
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +360,8 @@ func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) 
 		} `json:"result"`
 	}
 
-	err = json.Unmarshal(res[0], &blockResponses)
+	//err = json.Unmarshal(res[0], &blockResponses)
+	err = utils.Recast(res[0].Result, &blockResponses)
 	if err != nil {
 		return nil, err
 	}

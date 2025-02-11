@@ -1,5 +1,7 @@
 package hivego
 
+// i just dropped this hrpcclient and changed it with hiveClient see hive.go
+/*
 import (
 	"errors"
 	"strconv"
@@ -79,3 +81,4 @@ func (h *HiveRpcNode) rpcExecBatchFast(endpoint string, queries []hrpcQuery) ([]
 
 	return batchResult, nil
 }
+*/
