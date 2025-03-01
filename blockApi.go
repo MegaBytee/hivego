@@ -31,8 +31,8 @@ type getVirtualOpsQueryParams struct {
 }
 
 const (
-	failureWaitTime = 2500 * time.Millisecond
-	retryWaitTime   = 1000 * time.Millisecond
+	failureWaitTime = 3500 * time.Millisecond
+	retryWaitTime   = 2000 * time.Millisecond
 )
 
 type Block struct {
@@ -183,10 +183,23 @@ var OperationType = operationTypes{
 	RecurrentTransfer:           "recurrent_transfer_operation",
 }
 
+func (h *HiveRpcNode) GetGlobalProps() (globalProps, error) {
+	var props globalProps
+	r, err := h.GetDynamicGlobalProps()
+	if err != nil {
+		return props, err
+	}
+
+	//err = json.Unmarshal(res, &props)
+	err = utils.Recast(r.Result, &props)
+	return props, err
+}
+
 func (h *HiveRpcNode) GetDynamicGlobalProps() (*utils.RPCResponse, error) {
 	q := hrpcQuery{method: utils.Get_dynamic_global_properties, params: []string{}}
 	return h.CallRaw(q)
 }
+
 func (h *HiveRpcNode) GetBlockRange(startBlock uint64, count uint64) ([]Block, error) {
 	return h.fetchBlockInRange(startBlock, count)
 }
@@ -225,6 +238,8 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 
 		for {
 			blockData, err := h.GetBlock(currentBlock)
+
+			log.Println(blockData.BlockNumber)
 			if err != nil {
 				log.Printf("Error fetching block %d: %v\n. Retrying in 3 seconds...", currentBlock, err)
 				time.Sleep(failureWaitTime)
@@ -234,6 +249,12 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 			blockChan <- blockData
 			currentBlock++
 			time.Sleep(retryWaitTime)
+		}
+	}()
+	// Start a separate goroutine to log the contents of blockChan
+	go func() {
+		for block := range blockChan {
+			log.Printf("Received block: %+v", block.BlockNumber) // Log the received block
 		}
 	}()
 
@@ -273,7 +294,7 @@ func (h *HiveRpcNode) FetchVirtualOps(blockHeight uint64, onlyVirtual bool, Incl
 	}
 
 	//err = json.Unmarshal(res[0], &virtualOpResponses)
-	err = utils.Recast(res[0].Result, &virtualOpResponses)
+	err = utils.Recast(res, &virtualOpResponses)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +342,7 @@ func (h *HiveRpcNode) fetchBlockInRange(startBlock, count uint64) ([]Block, erro
 		} `json:"result"`
 	}
 
-	err = utils.Recast(res[0].Result, &blockRangeResponses)
+	err = utils.Recast(res, &blockRangeResponses)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +355,15 @@ func (h *HiveRpcNode) fetchBlockInRange(startBlock, count uint64) ([]Block, erro
 	var processedBlocks []Block
 	for _, block := range blocks {
 		blockInt, _ := hex.DecodeString(block.BlockID[0:8])
-		block.BlockNumber = binary.BigEndian.Uint64(blockInt)
+		// Ensure blockInt has 8 bytes, pad with zeros if necessary
+		if len(blockInt) < 8 {
+			paddedBlockInt := make([]byte, 8)
+			copy(paddedBlockInt[8-len(blockInt):], blockInt)
+			block.BlockNumber = binary.BigEndian.Uint64(paddedBlockInt)
+		} else {
+			block.BlockNumber = binary.BigEndian.Uint64(blockInt)
+		}
+		//block.BlockNumber = binary.BigEndian.Uint64(blockInt)
 		processedBlocks = append(processedBlocks, block)
 	}
 	return processedBlocks, nil
@@ -360,8 +389,7 @@ func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) 
 		} `json:"result"`
 	}
 
-	//err = json.Unmarshal(res[0], &blockResponses)
-	err = utils.Recast(res[0].Result, &blockResponses)
+	err = utils.Recast(res, &blockResponses)
 	if err != nil {
 		return nil, err
 	}
@@ -372,8 +400,17 @@ func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) 
 	}
 	var processedBlocks []Block
 	for _, block := range blocks {
+
 		blockInt, _ := hex.DecodeString(block.BlockID[0:8])
-		block.BlockNumber = binary.BigEndian.Uint64(blockInt)
+		// Ensure blockInt has 8 bytes, pad with zeros if necessary
+		if len(blockInt) < 8 {
+			paddedBlockInt := make([]byte, 8)
+			copy(paddedBlockInt[8-len(blockInt):], blockInt)
+			block.BlockNumber = binary.BigEndian.Uint64(paddedBlockInt)
+		} else {
+			block.BlockNumber = binary.BigEndian.Uint64(blockInt)
+		}
+		//block.BlockNumber = binary.BigEndian.Uint64(blockInt)
 		processedBlocks = append(processedBlocks, block)
 	}
 	return processedBlocks, nil
