@@ -31,8 +31,8 @@ type getVirtualOpsQueryParams struct {
 }
 
 const (
-	failureWaitTime = 3500 * time.Millisecond
-	retryWaitTime   = 2000 * time.Millisecond
+	failureWaitTime = 2500 * time.Millisecond
+	retryWaitTime   = 1000 * time.Millisecond
 )
 
 type Block struct {
@@ -189,8 +189,6 @@ func (h *HiveRpcNode) GetGlobalProps() (globalProps, error) {
 	if err != nil {
 		return props, err
 	}
-
-	//err = json.Unmarshal(res, &props)
 	err = utils.Recast(r.Result, &props)
 	return props, err
 }
@@ -226,7 +224,6 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 		}
 
 		var props globalProps
-		//err = json.Unmarshal(res, &props)
 		err = utils.Recast(res.Result, &props)
 		if err != nil {
 			log.Fatalf("Failed to unmarshal dynamic global properties: %v", err)
@@ -238,8 +235,6 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 
 		for {
 			blockData, err := h.GetBlock(currentBlock)
-
-			log.Println(blockData.BlockNumber)
 
 			if err != nil || blockData.BlockID == "" {
 				log.Printf("Error fetching block %d: %v\n. Retrying in 3 seconds...", currentBlock, err)
@@ -353,21 +348,7 @@ func (h *HiveRpcNode) fetchBlockInRange(startBlock, count uint64) ([]Block, erro
 		blocks = append(blocks, blockRangeResponse.Result.Blocks...)
 	}
 
-	var processedBlocks []Block
-	for _, block := range blocks {
-		blockInt, _ := hex.DecodeString(block.BlockID[0:8])
-		// Ensure blockInt has 8 bytes, pad with zeros if necessary
-		if len(blockInt) < 8 {
-			paddedBlockInt := make([]byte, 8)
-			copy(paddedBlockInt[8-len(blockInt):], blockInt)
-			block.BlockNumber = binary.BigEndian.Uint64(paddedBlockInt)
-		} else {
-			block.BlockNumber = binary.BigEndian.Uint64(blockInt)
-		}
-		//block.BlockNumber = binary.BigEndian.Uint64(blockInt)
-		processedBlocks = append(processedBlocks, block)
-	}
-	return processedBlocks, nil
+	return processedBlocks(blocks), nil
 }
 
 func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) {
@@ -400,6 +381,11 @@ func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) 
 	for _, blockResponse := range blockResponses {
 		blocks = append(blocks, blockResponse.Result.Block)
 	}
+
+	return processedBlocks(blocks), nil
+}
+
+func processedBlocks(blocks []Block) []Block {
 	var processedBlocks []Block
 
 	for _, block := range blocks {
@@ -415,9 +401,9 @@ func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) 
 			} else {
 				block.BlockNumber = binary.BigEndian.Uint64(blockInt)
 			}
-			//block.BlockNumber = binary.BigEndian.Uint64(blockInt)
+
 			processedBlocks = append(processedBlocks, block)
 		}
 	}
-	return processedBlocks, nil
+	return processedBlocks
 }
