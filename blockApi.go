@@ -240,7 +240,8 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 			blockData, err := h.GetBlock(currentBlock)
 
 			log.Println(blockData.BlockNumber)
-			if err != nil {
+
+			if err != nil || blockData.BlockID == "" {
 				log.Printf("Error fetching block %d: %v\n. Retrying in 3 seconds...", currentBlock, err)
 				time.Sleep(failureWaitTime)
 				continue
@@ -390,6 +391,7 @@ func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) 
 	}
 
 	err = utils.Recast(res, &blockResponses)
+
 	if err != nil {
 		return nil, err
 	}
@@ -399,19 +401,23 @@ func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) 
 		blocks = append(blocks, blockResponse.Result.Block)
 	}
 	var processedBlocks []Block
+
 	for _, block := range blocks {
 
-		blockInt, _ := hex.DecodeString(block.BlockID[0:8])
-		// Ensure blockInt has 8 bytes, pad with zeros if necessary
-		if len(blockInt) < 8 {
-			paddedBlockInt := make([]byte, 8)
-			copy(paddedBlockInt[8-len(blockInt):], blockInt)
-			block.BlockNumber = binary.BigEndian.Uint64(paddedBlockInt)
-		} else {
-			block.BlockNumber = binary.BigEndian.Uint64(blockInt)
+		if block.BlockID != "" {
+			blockInt, _ := hex.DecodeString(block.BlockID[0:8])
+
+			// Ensure blockInt has 8 bytes, pad with zeros if necessary
+			if len(blockInt) < 8 {
+				paddedBlockInt := make([]byte, 8)
+				copy(paddedBlockInt[8-len(blockInt):], blockInt)
+				block.BlockNumber = binary.BigEndian.Uint64(paddedBlockInt)
+			} else {
+				block.BlockNumber = binary.BigEndian.Uint64(blockInt)
+			}
+			//block.BlockNumber = binary.BigEndian.Uint64(blockInt)
+			processedBlocks = append(processedBlocks, block)
 		}
-		//block.BlockNumber = binary.BigEndian.Uint64(blockInt)
-		processedBlocks = append(processedBlocks, block)
 	}
 	return processedBlocks, nil
 }

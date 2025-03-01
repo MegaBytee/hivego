@@ -7,7 +7,6 @@ import (
 	"github.com/vsc-eco/hivego/utils"
 )
 
-// run this server for testing the jsonrpc client with proxy
 func main() {
 	proxyURL := "http or https proxy_url_here"
 	hc_proxy, _ := utils.NewHTTPClientWithProxy(proxyURL)
