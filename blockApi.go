@@ -194,7 +194,7 @@ func (h *HiveRpcNode) GetGlobalProps() (globalProps, error) {
 }
 
 func (h *HiveRpcNode) GetDynamicGlobalProps() (*utils.RPCResponse, error) {
-	q := hrpcQuery{method: utils.Get_dynamic_global_properties, params: []string{}}
+	q := hrpcQuery{method: CondenserApiGetDynamicGlobalProperties, params: []string{}}
 	return h.CallRaw(q)
 }
 
@@ -259,7 +259,7 @@ func (h *HiveRpcNode) StreamBlocks() (<-chan Block, error) {
 
 func (h *HiveRpcNode) FetchVirtualOps(blockHeight uint64, onlyVirtual bool, IncludeReversible bool) ([]VirtualOp, error) {
 	params := getVirtualOpsQueryParams{BlockNum: blockHeight, OnlyVirtual: IncludeReversible, IncludeReversible: IncludeReversible}
-	query := hrpcQuery{method: utils.Get_ops_in_block, params: params}
+	query := hrpcQuery{method: CondenserApiGetOpsInBlock, params: params}
 	queries := []hrpcQuery{query}
 
 	res, err := h.CallBatchRaw(queries)
@@ -322,7 +322,7 @@ func (h *HiveRpcNode) FetchVirtualOps(blockHeight uint64, onlyVirtual bool, Incl
 
 func (h *HiveRpcNode) fetchBlockInRange(startBlock, count uint64) ([]Block, error) {
 	params := getBlockRangeQueryParams{StartingBlockNum: startBlock, Count: count}
-	query := hrpcQuery{method: utils.Get_block_range, params: params}
+	query := hrpcQuery{method: BlockApiGetBlockRange, params: params}
 	queries := []hrpcQuery{query}
 
 	res, err := h.CallBatchRaw(queries)
@@ -354,7 +354,7 @@ func (h *HiveRpcNode) fetchBlockInRange(startBlock, count uint64) ([]Block, erro
 func (h *HiveRpcNode) fetchBlock(params []getBlockQueryParams) ([]Block, error) {
 	var queries []hrpcQuery
 	for _, param := range params {
-		query := hrpcQuery{method: utils.Get_block, params: param}
+		query := hrpcQuery{method: BlockApiGetBlock, params: param}
 		queries = append(queries, query)
 	}
 

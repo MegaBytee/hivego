@@ -20,7 +20,7 @@ type HiveRpcNode struct {
 }
 
 type hrpcQuery struct {
-	method string
+	method ApiMethod
 	params interface{}
 }
 
@@ -58,7 +58,7 @@ func (h *HiveRpcNode) setRpc() {
 }
 func (h *HiveRpcNode) CallRaw(query hrpcQuery) (*utils.RPCResponse, error) {
 	h.setRpc()
-	request := utils.NewRequestWithID(h.id, query.method, query.params)
+	request := utils.NewRequestWithID(h.id, string(query.method), query.params)
 	return h.rpc.CallRaw(context.Background(), request)
 }
 
@@ -66,7 +66,7 @@ func (h *HiveRpcNode) CallBatchRaw(queries []hrpcQuery) (utils.RPCResponses, err
 	h.setRpc()
 	var requests utils.RPCRequests
 	for i, query := range queries {
-		request := utils.NewRequestWithID(i, query.method, query.params)
+		request := utils.NewRequestWithID(i, string(query.method), query.params)
 		requests = append(requests, request)
 	}
 	return h.rpc.CallBatchRaw(context.Background(), requests)

@@ -113,7 +113,7 @@ func (ct CustomTime) ToTime() time.Time {
 func (h *HiveRpcNode) GetAccount(accountNames []string) ([]AccountData, error) {
 	params := [][]string{accountNames}
 	var query = hrpcQuery{
-		method: utils.Get_accounts,
+		method: CondenserApiGetAccounts,
 		params: params,
 	}
 

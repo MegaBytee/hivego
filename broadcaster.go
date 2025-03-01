@@ -3,8 +3,6 @@ package hivego
 import (
 	"encoding/hex"
 	"fmt"
-
-	"github.com/vsc-eco/hivego/utils"
 )
 
 func (h *HiveRpcNode) Broadcast(ops []HiveOperation, wif *string) (string, error) {
@@ -43,7 +41,7 @@ func (h *HiveRpcNode) Broadcast(ops []HiveOperation, wif *string) (string, error
 	var params []interface{}
 	params = append(params, tx)
 	if !h.NoBroadcast {
-		q := hrpcQuery{utils.Broadcast_transaction, params}
+		q := hrpcQuery{CondenserApiBroadcastTransaction, params}
 		res, err := h.CallRaw(q)
 		if err != nil {
 			return res.Error.Message, err
@@ -62,7 +60,7 @@ func (h *HiveRpcNode) BroadcastRaw(tx HiveTransaction) (string, error) {
 	var params []interface{}
 	params = append(params, tx)
 	if !h.NoBroadcast {
-		q := hrpcQuery{utils.Broadcast_transaction, params}
+		q := hrpcQuery{CondenserApiBroadcastTransaction, params}
 		res, err := h.CallRaw(q)
 		if err != nil {
 			return res.Error.Message, err

@@ -70,7 +70,7 @@ type TransactionQueryParams struct {
 
 func (h *HiveRpcNode) GetTransaction(txId string, includeReversible bool) (HiveTransaction, error) {
 	var ht HiveTransaction
-	q := hrpcQuery{method: utils.Get_transaction, params: TransactionQueryParams{TransactionId: txId, IncludeReversible: includeReversible}}
+	q := hrpcQuery{method: CondenserApiGetTransaction, params: TransactionQueryParams{TransactionId: txId, IncludeReversible: includeReversible}}
 	res, err := h.CallRaw(q)
 	if err != nil {
 		return ht, err
